@@ -24,11 +24,19 @@ class LangChain:
         query (Callable[[Any, Iterable[_PromptType]], Iterable[_ResponseType]]): Callable executing LLM prompts when
             supplied with the `integration` object.
         """
-        self._langchain_model = LangChain.get_type_to_cls_dict()[api](
-            model_name=name, **config
-        )
+        self._langchain_model = LangChain.langchain_model_init(name, api, config)
         self.query = query
         self._check_installation()
+
+    @staticmethod
+    def langchain_model_init(name: str, api: str, config: Dict[Any, Any]) -> Type["langchain.llms.base.BaseLLM"]:
+        match api:
+            case "ollama" | "baseten":
+                LangChain.get_type_to_cls_dict()[api](model=name, **config)
+            case "fireworks":
+                LangChain.get_type_to_cls_dict()[api](model_id=name, **config)
+            case _:
+                LangChain.get_type_to_cls_dict()[api](model_name=name, **config)
 
     @staticmethod
     def get_type_to_cls_dict() -> Dict[str, Type["langchain.llms.base.BaseLLM"]]:
